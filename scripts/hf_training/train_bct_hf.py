@@ -23,8 +23,8 @@ from pathlib import Path
 import torch
 from datasets import Dataset
 from peft import LoraConfig
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from trl import SFTTrainer
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from trl import SFTTrainer, SFTConfig
 
 
 def load_jsonl(path: Path) -> list[dict]:
@@ -100,7 +100,8 @@ def main():
     )
 
     # ── Training args ─────────────────────────────────────────────────────────
-    training_args = TrainingArguments(
+    # SFTConfig inherits TrainingArguments and adds SFT-specific fields
+    training_args = SFTConfig(
         output_dir=args.output,
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
@@ -114,11 +115,12 @@ def main():
         report_to="none" if args.no_wandb else "wandb",
         run_name=Path(args.output).name,
         dataloader_num_workers=0,
+        max_seq_length=args.max_seq_len,
+        dataset_text_field="text",
     )
 
     # ── SFTTrainer ────────────────────────────────────────────────────────────
-    # dataset_text_field="text" tells SFTTrainer to use the formatted string.
-    # It automatically masks prompt tokens (-100) so CE loss is computed
+    # SFTConfig masks prompt tokens (-100) so CE loss is computed
     # only on response tokens — same as Tinker's weighted NLL with weight=0
     # on prompt tokens and weight=1 on response tokens.
     trainer = SFTTrainer(
@@ -126,8 +128,6 @@ def main():
         processing_class=tokenizer,
         train_dataset=dataset,
         peft_config=peft_config,
-        dataset_text_field="text",
-        max_seq_length=args.max_seq_len,
         args=training_args,
     )
 
