@@ -123,7 +123,7 @@ def main():
     # on prompt tokens and weight=1 on response tokens.
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=dataset,
         peft_config=peft_config,
         dataset_text_field="text",
