@@ -82,7 +82,7 @@ def main():
     print(f"Loading model: {args.model}")
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
         device_map="auto",
     )
 
@@ -115,7 +115,7 @@ def main():
         report_to="none" if args.no_wandb else "wandb",
         run_name=Path(args.output).name,
         dataloader_num_workers=0,
-        max_seq_length=args.max_seq_len,
+        max_length=args.max_seq_len,
         dataset_text_field="text",
     )
 
